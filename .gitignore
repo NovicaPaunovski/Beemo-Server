@@ -3,6 +3,7 @@
 ################################################################################
 
 /.vs
+/Beemo-Server/.vs
 /Beemo-Server/.vs/Beemo-Server
 /Beemo-Server/Beemo-Server/bin
 /Beemo-Server/Beemo-Server/obj
