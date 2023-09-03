@@ -6,3 +6,7 @@
 /Beemo-Server/.vs/Beemo-Server
 /Beemo-Server/Beemo-Server/bin
 /Beemo-Server/Beemo-Server/obj
+/Beemo-Server/Beemo-Server.Data/bin
+/Beemo-Server/Beemo-Server.Data/obj
+/Beemo-Server/Beemo-Server.Service/bin
+/Beemo-Server/Beemo-Server.Service/obj
