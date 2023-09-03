@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Beemo-Server/.vs/Beemo-Server
+/Beemo-Server/Beemo-Server/bin
+/Beemo-Server/Beemo-Server/obj
