@@ -108,7 +108,7 @@ namespace Beemo_Server.Service.Implementations
                     // Token claims
                     new Claim(ClaimTypes.Name, user.Username),
                 }),
-                Expires = DateTime.UtcNow.AddDays(7), // Token expiration time
+                Expires = DateTime.UtcNow.AddDays(1), // Token expiration time
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
