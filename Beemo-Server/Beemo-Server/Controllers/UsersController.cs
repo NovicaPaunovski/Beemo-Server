@@ -1,4 +1,5 @@
 ﻿using Beemo_Server.Data.Models.Requests.User;
+using Beemo_Server.Data.Models.TransferObjects;
 using Beemo_Server.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -73,7 +74,13 @@ namespace Beemo_Server.Controllers
         {
             try
             {
-                var userProfile = _userService.GetByUsername(username);
+                var user = _userService.GetByUsername(username);
+                var userProfile = new UserProfile
+                {
+                    Username = user.Username,
+                    Email = user.Email,
+                    Name = user.Name,
+                };
                 return Ok(new { UserProfile = userProfile });
             }
             catch (Exception exception)
