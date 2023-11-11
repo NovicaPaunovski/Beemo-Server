@@ -64,7 +64,7 @@ namespace Beemo_Server.Controllers
                 }
 
                 var updatedUser = _userService.ChangePassword(changePasswordRequest);
-                return Ok(new { Message = "Password changed successfully", User = updatedUser });
+                return Ok(new { Message = "Password changed successfully", Username = updatedUser.Username });
             }
             catch (Exception ex)
             {
