@@ -90,7 +90,7 @@ namespace Beemo_Server.Service.Implementations
 
                 if (changePasswordRequest.NewPassword == changePasswordRequest.OldPassword) { throw new ArgumentException("New password can not be the same as old password"); }
 
-                existingUser.Password = changePasswordRequest.NewPassword;
+                existingUser.Password = BCrypt.Net.BCrypt.HashPassword(changePasswordRequest.NewPassword);
 
                 var updatedUser = _userRepository.Update(existingUser);
 
@@ -101,7 +101,7 @@ namespace Beemo_Server.Service.Implementations
         public string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:SecretKey"]);
+            var key = Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -113,7 +113,9 @@ namespace Beemo_Server.Service.Implementations
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7), // Token expiration time
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                Issuer = _configuration["JwtSettings:Issuer"],
+                Audience = _configuration["JwtSettings:Audience"],
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
