@@ -1,4 +1,5 @@
 using Beemo_Server.Data.Context;
+using Beemo_Server.Dependencies;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,9 @@ builder.Services.AddDbContextFactory<BeemoContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("BeemoDbContext"));
 });
+
+// Dependency injection registry
+builder.Services.RegisterServices(builder.Configuration);
 
 var app = builder.Build();
 
