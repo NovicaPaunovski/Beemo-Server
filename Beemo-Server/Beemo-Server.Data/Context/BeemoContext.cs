@@ -9,6 +9,7 @@ namespace Beemo_Server.Data.Context
             : base(options) { }
 
         #region DbSets
+        public DbSet<User> Users { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

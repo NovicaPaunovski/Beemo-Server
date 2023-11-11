@@ -48,11 +48,12 @@ namespace Beemo_Server.Service.Implementations
             {
                 var user = _userRepository.GetByUsername(loginRequest.Username);
 
-                if (user == null || !user.VerifyPassword(loginRequest.Password)) { throw new UnauthorizedAccessException("Invalid user or password."); }
+                if (user == null || !VerifyPassword(loginRequest.Password, user.Password)) { throw new UnauthorizedAccessException("Invalid user or password."); }
 
                 return user;
             }
         }
+
         public User Register(Register registerRequest)
         {
             using (var context = _dbContextFactory.CreateDbContext())
@@ -63,19 +64,20 @@ namespace Beemo_Server.Service.Implementations
                 var existingUserEmail = _userRepository.GetByEmail(registerRequest.Email);
                 if (existingUserEmail != null) { throw new ArgumentException($"A user with the email {registerRequest.Email} already exists"); }
 
-                User newUser = new User();
-
-                newUser.Username = registerRequest.Username;
-                newUser.Name = registerRequest.Name;
-                newUser.Email = registerRequest.Email;
-                newUser.Password = registerRequest.Password;
+                User newUser = new User
+                {
+                    Username = registerRequest.Username,
+                    Name = registerRequest.Name,
+                    Email = registerRequest.Email,
+                    Password = BCrypt.Net.BCrypt.HashPassword(registerRequest.Password)
+                };
 
                 var createdUser = _userRepository.Insert(newUser);
 
                 return createdUser;
             }
         }
-
+        
         public User ChangePassword(ChangePassword changePasswordRequest)
         {
             using (var context = _dbContextFactory.CreateDbContext())
@@ -84,7 +86,7 @@ namespace Beemo_Server.Service.Implementations
 
                 if (existingUser == null) { throw new ArgumentOutOfRangeException($"A user with the username {changePasswordRequest.Username} doesn't exists"); }
 
-                if (!existingUser.VerifyPassword(changePasswordRequest.OldPassword)) { throw new ArgumentException("Invalid password"); }
+                if (!VerifyPassword(changePasswordRequest.OldPassword, existingUser.Password)) { throw new ArgumentException("Invalid password"); }
 
                 if (changePasswordRequest.NewPassword == changePasswordRequest.OldPassword) { throw new ArgumentException("New password can not be the same as old password"); }
 
@@ -116,6 +118,14 @@ namespace Beemo_Server.Service.Implementations
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+        #endregion
+
+        #region Private Methods
+        // Verify if a given password matches the hashed password
+        private bool VerifyPassword(string password, string hashedPassword)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
         #endregion
     }

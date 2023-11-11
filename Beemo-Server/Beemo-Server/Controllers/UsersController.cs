@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace Beemo_Server.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [ApiController]
     public class UsersController : BaseController
     {
@@ -25,7 +25,7 @@ namespace Beemo_Server.Controllers
             try
             {
                 var createdUser = _userService.Register(registerRequest);
-                return Ok(new { Message = "Registration successful", User = createdUser });
+                return Ok(new { Message = "Registration successful", Username = createdUser.Username });
             }
             catch (Exception exception)
             {
