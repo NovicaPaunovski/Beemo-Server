@@ -4,6 +4,7 @@ using Beemo_Server.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Beemo_Server.Controllers
 {
@@ -54,10 +55,13 @@ namespace Beemo_Server.Controllers
             try
             {
                 // Retrieve the username of the authenticated user (from the token)
-                var username = User.Identity.Name;
+                var username = User.FindFirst(ClaimTypes.Name)?.Value;
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
 
-                // Set the username in the request for additional verification
-                changePasswordRequest.Username = username;
+                if (username != changePasswordRequest.Username || email != changePasswordRequest.Email)
+                {
+                    return Unauthorized(new { Message = "User does not match the authorized user." });
+                }
 
                 var updatedUser = _userService.ChangePassword(changePasswordRequest);
                 return Ok(new { Message = "Password changed successfully", User = updatedUser });
