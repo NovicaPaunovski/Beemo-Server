@@ -66,9 +66,9 @@ namespace Beemo_Server.Controllers
                 var updatedUser = _userService.ChangePassword(changePasswordRequest);
                 return Ok(new { Message = "Password changed successfully", Username = updatedUser.Username });
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                return StatusCode(500, new { Message = "An error occurred while processing the request.", Error = ex.Message });
+                return StatusCode(500, new { Message = "An error occurred while processing the request.", Error = exception.Message });
             }
         }
 
