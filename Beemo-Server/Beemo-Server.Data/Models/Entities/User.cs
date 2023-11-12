@@ -7,7 +7,10 @@ namespace Beemo_Server.Data.Models.Entities
     {
         #region Properties
         [DataMember] 
-        public string Name { get; set; }
+        public string FirstName { get; set; }
+
+        [DataMember]
+        public string LastName { get; set; }
 
         [DataMember] 
         public string Email { get; set; }

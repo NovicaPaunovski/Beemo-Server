@@ -67,7 +67,8 @@ namespace Beemo_Server.Service.Implementations
                 User newUser = new User
                 {
                     Username = registerRequest.Username,
-                    Name = registerRequest.Name,
+                    FirstName = registerRequest.FirstName,
+                    LastName = registerRequest.LastName,
                     Email = registerRequest.Email,
                     Password = BCrypt.Net.BCrypt.HashPassword(registerRequest.Password)
                 };

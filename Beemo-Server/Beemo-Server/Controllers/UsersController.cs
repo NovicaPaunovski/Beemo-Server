@@ -83,7 +83,8 @@ namespace Beemo_Server.Controllers
                 {
                     Username = user.Username,
                     Email = user.Email,
-                    Name = user.Name,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
                 };
                 return Ok(new { UserProfile = userProfile });
             }
