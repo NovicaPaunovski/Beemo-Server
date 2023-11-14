@@ -4,7 +4,7 @@ using Beemo_Server.Data.Repositories.Interfaces;
 
 namespace Beemo_Server.Data.Repositories.Implementations
 {
-    public class UserRepository : BaseRepository<User>, IUserRepository
+    public class UserRepository : BaseEntityRepository<User>, IUserRepository
     {
         public UserRepository(BeemoContext context) : base(context)
         {

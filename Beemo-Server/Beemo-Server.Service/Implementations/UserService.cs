@@ -12,7 +12,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Beemo_Server.Service.Implementations
 {
-    public class UserService : BaseEntityService, IUserService
+    public class UserService : BaseEntityService<User, IUserRepository>, IUserService
     {
         #region Fields
         private readonly IConfiguration _configuration;
@@ -21,7 +21,7 @@ namespace Beemo_Server.Service.Implementations
         #endregion
 
         #region Public Constructor
-        public UserService(IUserRepository entityRepository, IDbContextFactory<BeemoContext> dbContextFactory, IConfiguration configuration)
+        public UserService(IUserRepository entityRepository, IDbContextFactory<BeemoContext> dbContextFactory, IConfiguration configuration) : base(entityRepository, dbContextFactory)
         {
             _configuration = configuration;
             _dbContextFactory = dbContextFactory;
@@ -85,7 +85,7 @@ namespace Beemo_Server.Service.Implementations
             {
                 var existingUser = _userRepository.GetByUsername(changePasswordRequest.Username);
 
-                if (existingUser == null) { throw new ArgumentOutOfRangeException($"A user with the username {changePasswordRequest.Username} doesn't exists"); }
+                if (existingUser == null) { throw new ArgumentOutOfRangeException($"A user with the username {changePasswordRequest.Username} doesn't exist!"); }
 
                 if (!VerifyPassword(changePasswordRequest.OldPassword, existingUser.Password)) { throw new ArgumentException("Invalid password"); }
 
@@ -97,6 +97,22 @@ namespace Beemo_Server.Service.Implementations
 
                 return updatedUser;
             }
+        }
+
+        public override User Update(User user)
+        {
+            var existingUser = _userRepository.GetById(user.Id);
+
+            if (existingUser == null) throw new ArgumentOutOfRangeException($"Cannot retrieve user information. User not found!");
+
+            existingUser.Username = user.Username;
+            existingUser.Email = user.Email;
+            existingUser.FirstName = user.FirstName;
+            existingUser.LastName = user.LastName;
+            existingUser.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+            existingUser.ModifiedDate = DateTime.Now;
+
+            return existingUser;
         }
 
         public string GenerateToken(User user)
