@@ -1,9 +1,10 @@
 ﻿using Beemo_Server.Data.Models.Entities;
 using Beemo_Server.Data.Models.Requests.User;
+using Beemo_Server.Data.Repositories.Interfaces;
 
 namespace Beemo_Server.Service.Interfaces
 {
-    public interface IUserService
+    public interface IUserService : IBaseEntityService<User, IUserRepository>
     {
         User GetByUsername(string username);
 

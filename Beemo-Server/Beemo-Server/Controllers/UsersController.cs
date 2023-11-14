@@ -1,4 +1,5 @@
-﻿using Beemo_Server.Data.Models.Requests.User;
+﻿using Beemo_Server.Data.Models.Entities;
+using Beemo_Server.Data.Models.Requests.User;
 using Beemo_Server.Data.Models.TransferObjects;
 using Beemo_Server.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -91,6 +92,21 @@ namespace Beemo_Server.Controllers
             catch (Exception exception)
             {
                 return StatusCode(500, new { Message = "An error occurred while processing the request.", Error = exception.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpPut("update")]
+        public IActionResult Update([FromBody] User user)
+        {
+            try
+            {
+                var updatedUser = _userService.Update(user);
+                return Ok(new { Message = "Update successful", Username = updatedUser.Username });
+            }
+            catch (Exception exception)
+            {
+                return BadRequest(new { Message = exception.Message });
             }
         }
     }

@@ -12,7 +12,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Beemo_Server.Service.Implementations
 {
-    public class UserService : IUserService
+    public class UserService : BaseEntityService, IUserService
     {
         #region Fields
         private readonly IConfiguration _configuration;
