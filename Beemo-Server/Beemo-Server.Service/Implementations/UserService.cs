@@ -105,14 +105,17 @@ namespace Beemo_Server.Service.Implementations
 
             if (existingUser == null) throw new ArgumentOutOfRangeException($"Cannot retrieve user information. User not found!");
 
+            var existingUsername = _userRepository.GetByUsername(user.Username);
+
+            if (existingUsername != null) throw new ArgumentException($"Cannot update user. A user with username {user.Username} already exists!");
+
             existingUser.Username = user.Username;
             existingUser.Email = user.Email;
             existingUser.FirstName = user.FirstName;
             existingUser.LastName = user.LastName;
             existingUser.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-            existingUser.ModifiedDate = DateTime.Now;
 
-            return existingUser;
+            return base.Update(existingUser);
         }
 
         public string GenerateToken(User user)
