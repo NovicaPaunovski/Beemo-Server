@@ -18,14 +18,16 @@ namespace Beemo_Server.Service.Implementations
         private readonly IConfiguration _configuration;
         private readonly IDbContextFactory<BeemoContext> _dbContextFactory;
         private IUserRepository _userRepository;
+        private readonly IEmailService _emailService;
         #endregion
 
         #region Public Constructor
-        public UserService(IUserRepository entityRepository, IDbContextFactory<BeemoContext> dbContextFactory, IConfiguration configuration) : base(entityRepository, dbContextFactory)
+        public UserService(IUserRepository entityRepository, IDbContextFactory<BeemoContext> dbContextFactory, IConfiguration configuration, IEmailService emailService) : base(entityRepository, dbContextFactory)
         {
             _configuration = configuration;
             _dbContextFactory = dbContextFactory;
             _userRepository = entityRepository;
+            _emailService = emailService;
         }
         #endregion
 
@@ -74,6 +76,8 @@ namespace Beemo_Server.Service.Implementations
                 };
 
                 var createdUser = _userRepository.Insert(newUser);
+
+                _emailService.SendEmail("Your Beemo account has been created!", "Only thing left is to verify the email", createdUser.Email);
 
                 return createdUser;
             }

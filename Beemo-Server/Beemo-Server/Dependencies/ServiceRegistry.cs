@@ -13,6 +13,7 @@ namespace Beemo_Server.Dependencies
 
             /* Services */
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IEmailService, EmailService>();
 
             /* Repositories */
             services.AddScoped<IUserRepository, UserRepository>();
