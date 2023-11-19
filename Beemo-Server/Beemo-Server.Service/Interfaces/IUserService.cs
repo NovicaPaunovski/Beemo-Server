@@ -15,5 +15,9 @@ namespace Beemo_Server.Service.Interfaces
         User ChangePassword(ChangePassword changePasswordRequest);
 
         string GenerateToken(User user);
+
+        User Verify(Verify verificationRequest);
+
+        void ResendVerificationToken(User user);
     }
 }

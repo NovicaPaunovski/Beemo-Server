@@ -15,17 +15,13 @@ namespace Beemo_Server.Service.Implementations
     public class UserService : BaseEntityService<User, IUserRepository>, IUserService
     {
         #region Fields
-        private readonly IConfiguration _configuration;
-        private readonly IDbContextFactory<BeemoContext> _dbContextFactory;
         private IUserRepository _userRepository;
         private readonly IEmailService _emailService;
         #endregion
 
         #region Public Constructor
-        public UserService(IUserRepository entityRepository, IDbContextFactory<BeemoContext> dbContextFactory, IConfiguration configuration, IEmailService emailService) : base(entityRepository, dbContextFactory)
+        public UserService(IUserRepository entityRepository, IDbContextFactory<BeemoContext> dbContextFactory, IEmailService emailService) : base(entityRepository, dbContextFactory)
         {
-            _configuration = configuration;
-            _dbContextFactory = dbContextFactory;
             _userRepository = entityRepository;
             _emailService = emailService;
         }
@@ -36,9 +32,9 @@ namespace Beemo_Server.Service.Implementations
         {
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                var user = _userRepository.GetByUsername(username);
+                var user = _userRepository.GetByUsername(username.ToLower());
 
-                if (user == null) { throw new ArgumentOutOfRangeException("User not found."); }
+                CheckExistingUser(user);
 
                 return user;
             }
@@ -48,7 +44,7 @@ namespace Beemo_Server.Service.Implementations
         {
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                var user = _userRepository.GetByUsername(loginRequest.Username);
+                var user = _userRepository.GetByUsername(loginRequest.Username.ToLower());
 
                 if (user == null || !VerifyPassword(loginRequest.Password, user.Password)) { throw new UnauthorizedAccessException("Invalid user or password."); }
 
@@ -60,24 +56,27 @@ namespace Beemo_Server.Service.Implementations
         {
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                var existingUser = _userRepository.GetByUsername(registerRequest.Username);
+                var existingUser = _userRepository.GetByUsername(registerRequest.Username.ToLower());
                 if (existingUser != null) { throw new ArgumentException($"A user with the username {registerRequest.Username} already exists"); }
 
-                var existingUserEmail = _userRepository.GetByEmail(registerRequest.Email);
+                var existingUserEmail = _userRepository.GetByEmail(registerRequest.Email.ToLower());
                 if (existingUserEmail != null) { throw new ArgumentException($"A user with the email {registerRequest.Email} already exists"); }
 
                 User newUser = new User
                 {
-                    Username = registerRequest.Username,
+                    Username = registerRequest.Username.ToLower(),
                     FirstName = registerRequest.FirstName,
                     LastName = registerRequest.LastName,
                     Email = registerRequest.Email,
-                    Password = BCrypt.Net.BCrypt.HashPassword(registerRequest.Password)
+                    Password = BCrypt.Net.BCrypt.HashPassword(registerRequest.Password),
+                    VerificationToken = GenerateVerificationToken(),
+                    VerificationTokenExpiration = DateTime.Now.AddHours(1),
+                    IsVerified = false
                 };
 
                 var createdUser = _userRepository.Insert(newUser);
 
-                _emailService.SendEmail("Your Beemo account has been created!", "Only thing left is to verify the email", createdUser.Email);
+                _emailService.SendEmail("Your Beemo account has been created!", GetVerificationEmail(createdUser.VerificationToken), createdUser.Email);
 
                 return createdUser;
             }
@@ -87,9 +86,9 @@ namespace Beemo_Server.Service.Implementations
         {
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                var existingUser = _userRepository.GetByUsername(changePasswordRequest.Username);
+                var existingUser = _userRepository.GetByUsername(changePasswordRequest.Username.ToLower());
 
-                if (existingUser == null) { throw new ArgumentOutOfRangeException($"A user with the username {changePasswordRequest.Username} doesn't exist!"); }
+                CheckExistingUser(existingUser);
 
                 if (!VerifyPassword(changePasswordRequest.OldPassword, existingUser.Password)) { throw new ArgumentException("Invalid password"); }
 
@@ -107,13 +106,15 @@ namespace Beemo_Server.Service.Implementations
         {
             var existingUser = _userRepository.GetById(user.Id);
 
-            if (existingUser == null) throw new ArgumentOutOfRangeException($"Cannot retrieve user information. User not found!");
+            CheckExistingUser(existingUser);
 
-            var existingUsername = _userRepository.GetByUsername(user.Username);
+            var existingUsername = _userRepository.GetByUsername(user.Username.ToLower());
 
-            if (existingUsername != null) throw new ArgumentException($"Cannot update user. A user with username {user.Username} already exists!");
+            if (existingUsername != null) throw new ArgumentException($"Cannot update user. A user with the username {user.Username} already exists!");
 
-            existingUser.Username = user.Username;
+            if (existingUser.Email != user.Email) existingUser.IsVerified = false;
+
+            existingUser.Username = user.Username.ToLower();
             existingUser.Email = user.Email;
             existingUser.FirstName = user.FirstName;
             existingUser.LastName = user.LastName;
@@ -122,10 +123,49 @@ namespace Beemo_Server.Service.Implementations
             return base.Update(existingUser);
         }
 
+        public User Verify(Verify verificationRequest)
+        {
+            var existingUser = _userRepository.GetByUsername(verificationRequest.Username.ToLower());
+
+            CheckExistingUser(existingUser);
+
+            if (existingUser.IsVerified) throw new ArgumentException($"User already verified.");
+
+            if (existingUser.VerificationTokenExpiration < verificationRequest.VerificationTime)
+            {
+                throw new InvalidOperationException($"Verification token has expired.");
+            }
+
+            if (existingUser.VerificationToken == verificationRequest.VerificationToken)
+            {
+                existingUser.IsVerified = true;
+                _userRepository.Update(existingUser);
+                return existingUser;
+            }
+
+            throw new ArgumentException($"Wrong verification token.");
+        }
+
+        public void ResendVerificationToken(User user)
+        {
+            var existingUser = _userRepository.GetById(user.Id);
+
+            CheckExistingUser(existingUser);
+
+            if (existingUser.IsVerified) throw new InvalidOperationException($"User email already verified.");
+
+            existingUser.VerificationToken = GenerateVerificationToken();
+            existingUser.VerificationTokenExpiration = DateTime.Now.AddHours(1);
+
+            _userRepository.Update(existingUser);
+
+            _emailService.SendEmail("Your new Beemo verificaton code!", GetVerificationEmail(existingUser.VerificationToken), existingUser.Email);
+        }
+
         public string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]);
+            var key = Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("BeemoJwtKey"));
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -138,8 +178,8 @@ namespace Beemo_Server.Service.Implementations
                 }),
                 Expires = DateTime.UtcNow.AddDays(7), // Token expiration time
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-                Issuer = _configuration["JwtSettings:Issuer"],
-                Audience = _configuration["JwtSettings:Audience"],
+                Issuer = Environment.GetEnvironmentVariable("BeemoJwtIssuer"),
+                Audience = Environment.GetEnvironmentVariable("BeemoJwtAudience"),
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -152,6 +192,21 @@ namespace Beemo_Server.Service.Implementations
         private bool VerifyPassword(string password, string hashedPassword)
         {
             return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+        }
+
+        private string GetVerificationEmail(string verificationCode)
+        {
+            return $"Only thing left is to verify the email.\n\nYour verification code is: \t{verificationCode}\t.\n\nThis code will expire in 1 hour.";
+        }
+
+        private string GenerateVerificationToken()
+        {
+            return Guid.NewGuid().ToString("N").Substring(0, 6);
+        }
+
+        private void CheckExistingUser(User user)
+        {
+            if (user == null) throw new ArgumentOutOfRangeException($"Cannot retrieve user information. User not found!");
         }
         #endregion
     }

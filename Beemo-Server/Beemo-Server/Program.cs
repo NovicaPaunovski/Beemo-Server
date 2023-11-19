@@ -40,8 +40,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // Add authentication services
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]);
+var secretKey = Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("BeemoJwtKey"));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -51,8 +50,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
+            ValidIssuer = Environment.GetEnvironmentVariable("BeemoJwtIssuer"),
+            ValidAudience = Environment.GetEnvironmentVariable("BeemoJwtAudience"),
             IssuerSigningKey = new SymmetricSecurityKey(secretKey)
         };
     });
@@ -64,7 +63,7 @@ builder.Services.AddDbContextFactory<BeemoContext>(options =>
 });
 
 // Dependency injection registry
-builder.Services.RegisterServices(builder.Configuration);
+builder.Services.RegisterServices();
 
 var app = builder.Build();
 

@@ -10,17 +10,14 @@ namespace Beemo_Server.Service.Implementations
     {
         #region Fields
         private SmtpClient _smtpClient;
-        private readonly IConfiguration _configuration;
         #endregion
 
         #region Constructor
-        public EmailService(IConfiguration configuration)
+        public EmailService()
         {
-            _configuration = configuration;
-
-            _smtpClient = new SmtpClient(_configuration["EmailServer:Client"]);
-            _smtpClient.Port = Convert.ToInt32(_configuration["EmailServer:Port"]);
-            _smtpClient.Credentials = new NetworkCredential(_configuration["EmailServer:Credentials"], _configuration["EmailServer:AccessKey"]);
+            _smtpClient = new SmtpClient(Environment.GetEnvironmentVariable("BeemoEmailClient"));
+            _smtpClient.Port = Convert.ToInt32(Environment.GetEnvironmentVariable("BeemoEmailClientPort"));
+            _smtpClient.Credentials = new NetworkCredential(Environment.GetEnvironmentVariable("BeemoEmailCredentials"), Environment.GetEnvironmentVariable("BeemoEmailAccessKey"));
             _smtpClient.EnableSsl = true;
         }
         #endregion
@@ -49,7 +46,7 @@ namespace Beemo_Server.Service.Implementations
             MailMessage mailMessage = new MailMessage();
             mailMessage.Subject = subject;
             mailMessage.Body = body;
-            mailMessage.From = new MailAddress(_configuration["EmailServer:Credentials"]);
+            mailMessage.From = new MailAddress(Environment.GetEnvironmentVariable("BeemoEmailCredentials"));
 
             return mailMessage;
         }

@@ -7,10 +7,8 @@ namespace Beemo_Server.Dependencies
 {
     public static class ServiceRegistry
     {
-        public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection RegisterServices(this IServiceCollection services)
         {
-            services.AddSingleton<IConfiguration>(configuration);
-
             /* Services */
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IEmailService, EmailService>();

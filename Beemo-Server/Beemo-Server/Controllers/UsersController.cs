@@ -50,6 +50,40 @@ namespace Beemo_Server.Controllers
         }
 
         [Authorize]
+        [HttpPost("verify")]
+        public IActionResult Verify([FromBody] Verify verificationRequest)
+        {
+            try
+            {
+                var verifiedUser = _userService.Verify(verificationRequest);
+                return Ok(new { Message = "Verification successful", Username = verifiedUser.Username });
+            }
+            catch (Exception exception)
+            {
+                return BadRequest(new { Message = exception.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpPost("resend-verification-code")]
+        public IActionResult ResendCode()
+        {
+            try
+            {
+                var username = User.FindFirst(ClaimTypes.Name)?.Value;
+                var user = _userService.GetByUsername(username);
+
+                _userService.ResendVerificationToken(user);
+
+                return Ok();
+            }
+            catch (Exception exception)
+            {
+                return BadRequest(new { Message = exception.Message });
+            }
+        }
+
+        [Authorize]
         [HttpPut("change-password")]
         public IActionResult ChangePassword([FromBody] ChangePassword changePasswordRequest)
         {
