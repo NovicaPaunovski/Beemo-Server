@@ -7,7 +7,7 @@ namespace Beemo_Server.Service
 {
     public abstract class BaseEntityService<TEntity, TRepository> : IBaseEntityService<TEntity, TRepository>
             where TEntity : BaseEntity
-            where TRepository : BaseRepository<TEntity>
+            where TRepository : IBaseEntityRepository<TEntity>
     {
         #region Fields
         protected readonly IDbContextFactory<BeemoContext> _dbContextFactory;
@@ -23,7 +23,7 @@ namespace Beemo_Server.Service
         #endregion Public Constructor
 
         #region Public Methods
-        public TEntity Create(TEntity entity)
+        public virtual TEntity Create(TEntity entity)
         {
             using (var context = _dbContextFactory.CreateDbContext())
             {
@@ -35,7 +35,7 @@ namespace Beemo_Server.Service
             }
         }
 
-        public TEntity Delete(TEntity entity)
+        public virtual TEntity Delete(TEntity entity)
         {
             using (var context = _dbContextFactory.CreateDbContext())
             {
@@ -45,7 +45,7 @@ namespace Beemo_Server.Service
             }
         }
 
-        public TEntity Update(TEntity entity)
+        public virtual TEntity Update(TEntity entity)
         {
             using (var context = _dbContextFactory.CreateDbContext())
             {
@@ -60,7 +60,7 @@ namespace Beemo_Server.Service
             }
         }
 
-        public ICollection<TEntity> GetAll()
+        public virtual ICollection<TEntity> GetAll()
         {
             using (var context = _dbContextFactory.CreateDbContext())
             {
@@ -68,7 +68,7 @@ namespace Beemo_Server.Service
             }
         }
 
-        public TEntity GetById(int id)
+        public virtual TEntity GetById(int id)
         {
             using (var context = _dbContextFactory.CreateDbContext())
             {

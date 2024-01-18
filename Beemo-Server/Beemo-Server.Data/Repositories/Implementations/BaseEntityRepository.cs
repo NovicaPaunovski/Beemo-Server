@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Beemo_Server.Data.Repositories
 {
-    public class BaseRepository<TEntity> : IBaseEntityRepository<TEntity>
+    public class BaseEntityRepository<TEntity> : IBaseEntityRepository<TEntity>
             where TEntity : BaseEntity
     {
         #region Fields
@@ -12,7 +12,7 @@ namespace Beemo_Server.Data.Repositories
         #endregion Fields
 
         #region Public Constructor
-        public BaseRepository(BeemoContext context)
+        public BaseEntityRepository(BeemoContext context)
         {
             _context = context;
         }
