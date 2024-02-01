@@ -12,18 +12,19 @@ var allowBeemoOrigins = "_allowBeemoOrigins";
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Enable CORS for Beemo Client
+// Enable CORS for Beemo-Client
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(allowBeemoOrigins, policy =>
     {
+        // Change for Production
         policy.WithOrigins("http://localhost", "http://localhost:3000", "http://localhost:3001")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Set up Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -71,6 +72,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Add database context
 builder.Services.AddDbContextFactory<BeemoContext>(options =>
 {
+    // TODO: Swap to environment variable for production
     options.UseSqlServer(builder.Configuration.GetConnectionString("BeemoDbContext"));
 });
 
