@@ -201,6 +201,7 @@ namespace Beemo_Server.Service.Implementations
 
         private string GenerateVerificationToken()
         {
+            //TODO: Hash verification token in database
             return Guid.NewGuid().ToString("N").Substring(0, 6);
         }
 
